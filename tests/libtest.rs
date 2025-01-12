@@ -45,4 +45,21 @@ mod tests {
         let response = executor(con).unwrap();
         assert_eq!(response.body, serde_json::to_string(&output_expected).unwrap());
     }
+
+    #[test]
+    fn test_set_command_using_env() {
+        let con = Content {
+            command: None,
+            args: None,
+            stdin: None,
+            complement_aws_path: Some(false),
+        };
+        let output_expected = StdoutErr {
+            stdout: "Hello, world!\n".to_string(),
+            stderr: "".to_string(),
+        };
+        std::env::set_var("LSBE_COMMAND", env!("CARGO_BIN_EXE_hello_world_test"));
+        let response = executor(con).unwrap();
+        assert_eq!(response.body, serde_json::to_string(&output_expected).unwrap());
+    }
 }

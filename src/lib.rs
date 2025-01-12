@@ -112,38 +112,48 @@ pub fn executor(con:Content) -> Result<Response, Box<dyn std::error::Error>> {
             con.command.unwrap()
         }
     } else {
-        let current_dir = if con.complement_aws_path.unwrap_or(true) {
-            std::env::var("LAMBDA_TASK_ROOT")
-                .map(PathBuf::from)
-                .unwrap_or_else(|_| std::env::current_dir().expect("Failed to get current directory"))
+        let lsbe_command = std::env::var("LSBE_COMMAND").unwrap_or("".to_string());
+        if lsbe_command.len() > 0 {
+            if con.complement_aws_path.unwrap_or(true) && !lsbe_command.contains("/") {
+                std::env::var("LAMBDA_TASK_ROOT").unwrap_or("".to_string()) + "/" + &lsbe_command
+            } else {
+                lsbe_command
+            }
         }
         else{
-            std::env::current_dir().expect("Failed to get current directory")
-        };
-        let command = current_dir.iter()
-            .find_map(|entry| {
-                let path = current_dir.join(entry);
-                if path.is_file() {
-                    #[cfg(unix)]
-                    {
-                        if path.metadata().map(|m| m.permissions().mode() & 0o111 != 0).unwrap_or(false) {
-                            if path.to_str() == Some(std::env::current_exe().unwrap().to_str().unwrap()) {
-                                return None;
+            let current_dir = if con.complement_aws_path.unwrap_or(true) {
+                std::env::var("LAMBDA_TASK_ROOT")
+                    .map(PathBuf::from)
+                    .unwrap_or_else(|_| std::env::current_dir().expect("Failed to get current directory"))
+            }
+            else{
+                std::env::current_dir().expect("Failed to get current directory")
+            };
+            let command = current_dir.iter()
+                .find_map(|entry| {
+                    let path = current_dir.join(entry);
+                    if path.is_file() {
+                        #[cfg(unix)]
+                        {
+                            if path.metadata().map(|m| m.permissions().mode() & 0o111 != 0).unwrap_or(false) {
+                                if path.to_str() == Some(std::env::current_exe().unwrap().to_str().unwrap()) {
+                                    return None;
+                                }
+                                return path.to_str().map(|s| s.to_string());
                             }
-                            return path.to_str().map(|s| s.to_string());
+                        }
+                        #[cfg(windows)]
+                        {
+                            if path.extension().map(|ext| ext.eq_ignore_ascii_case("exe")).unwrap_or(false) {
+                                return path.to_str().map(|s| s.to_string());
+                            }
                         }
                     }
-                    #[cfg(windows)]
-                    {
-                        if path.extension().map(|ext| ext.eq_ignore_ascii_case("exe")).unwrap_or(false) {
-                            return path.to_str().map(|s| s.to_string());
-                        }
-                    }
-                }
-                None
-            })
-            .expect("No executable found in current directory");
-        command
+                    None
+                })
+                .expect(format!("Failed to find executable in {:?}", current_dir).as_str());
+            command
+        }
     };
     let args = con.args.unwrap_or(vec![]);
     let stdin_content = con.stdin.unwrap_or("".to_string());
