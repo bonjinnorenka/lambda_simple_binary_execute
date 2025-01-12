@@ -1,4 +1,4 @@
-name: code test
+name: code test x86_64
 
 on: 
     push:

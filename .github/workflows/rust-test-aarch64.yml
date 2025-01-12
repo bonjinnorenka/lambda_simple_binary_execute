@@ -1,4 +1,4 @@
-name: code test
+name: code test aarch64
 
 on: 
     push:

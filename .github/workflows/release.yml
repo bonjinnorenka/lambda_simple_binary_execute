@@ -24,15 +24,15 @@ jobs:
           toolchain: stable
           profile: minimal
 
-      # cross のインストール
-      - name: Install cross
-        run: cargo install cross --locked
-
       # キャッシュの設定
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
+      
+      # cross のインストール
+      - name: Install cross
+        run: cargo install cross --locked
 
       # 静的リンクされた aarch64 バイナリのビルド
       - name: Build for aarch64 (static binary)
@@ -50,6 +50,8 @@ jobs:
       - name: Prepare release artifacts
         run: |
           mkdir -p artifacts
+          mkdir -p artifacts/lambda_simple_binary_execute-aarch64
+          mkdir -p artifacts/lambda_simple_binary_execute-x86_64
           cp target/aarch64-unknown-linux-musl/release/* artifacts/lambda_simple_binary_execute-aarch64
           cp target/x86_64-unknown-linux-musl/release/* artifacts/lambda_simple_binary_execute-x86_64
 
