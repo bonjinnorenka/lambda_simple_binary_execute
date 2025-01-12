@@ -7,6 +7,7 @@ mod tests {
             command: Some(env!("CARGO_BIN_EXE_hello_world_test").to_string()),
             args: None,
             stdin: None,
+            complement_aws_path: Some(false),
         };
         let output_expected = StdoutErr {
             stdout: "Hello, world!\n".to_string(),
@@ -22,6 +23,7 @@ mod tests {
             command: Some(env!("CARGO_BIN_EXE_hello_world_test").to_string()),
             args: Some(vec!["--panic".to_string()]),
             stdin: None,
+            complement_aws_path: Some(false),
         };
         let response = executor(con);
         assert!(response.is_err());
@@ -34,6 +36,7 @@ mod tests {
             command: Some(env!("CARGO_BIN_EXE_hello_world_test").to_string()),
             args: Some(vec!["--use-stdin".to_string()]),
             stdin: Some(input.to_string()),
+            complement_aws_path: Some(false),
         };
         let output_expected = StdoutErr {
             stdout: input.to_string() + "\n",

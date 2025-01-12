@@ -1,5 +1,5 @@
 use reqwest;
-use std::io::Write;
+use std::{io::Write, path::PathBuf};
 
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
@@ -95,6 +95,7 @@ pub struct Content {
     pub command: Option<String>,//if empty, find executable in path
     pub args: Option<Vec<String>>,
     pub stdin: Option<String>,
+    pub complement_aws_path: Option<bool>,
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
@@ -105,9 +106,20 @@ pub struct StdoutErr {
 
 pub fn executor(con:Content) -> Result<Response, Box<dyn std::error::Error>> {
     let command = if con.command.is_some() {
-        con.command.unwrap()
+        if con.complement_aws_path.unwrap_or(true) && !con.command.clone().unwrap().contains("/") {
+            std::env::var("LAMBDA_TASK_ROOT").unwrap_or("".to_string()) + "/" + &con.command.unwrap()
+        } else {
+            con.command.unwrap()
+        }
     } else {
-        let current_dir = std::env::current_dir().expect("Failed to get current directory");
+        let current_dir = if con.complement_aws_path.unwrap_or(true) {
+            std::env::var("LAMBDA_TASK_ROOT")
+                .map(PathBuf::from)
+                .unwrap_or_else(|_| std::env::current_dir().expect("Failed to get current directory"))
+        }
+        else{
+            std::env::current_dir().expect("Failed to get current directory")
+        };
         let command = current_dir.iter()
             .find_map(|entry| {
                 let path = current_dir.join(entry);
@@ -115,6 +127,9 @@ pub fn executor(con:Content) -> Result<Response, Box<dyn std::error::Error>> {
                     #[cfg(unix)]
                     {
                         if path.metadata().map(|m| m.permissions().mode() & 0o111 != 0).unwrap_or(false) {
+                            if path.to_str() == Some(std::env::current_exe().unwrap().to_str().unwrap()) {
+                                return None;
+                            }
                             return path.to_str().map(|s| s.to_string());
                         }
                     }
