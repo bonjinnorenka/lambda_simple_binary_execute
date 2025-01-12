@@ -8,9 +8,9 @@ x86_64 and arm64 binaries are available.
 
 1. Download the binary for lambda runtime architecture
 
-[Download x86_64 binary](https://github.com/bonjinnorenka/releases/latest/download/lambda_simple_binary_execute-x86_64)
+[Download x86_64 binary](https://github.com/bonjinnorenka/lambda_simple_binary_execute/releases/latest/download/lambda_simple_binary_execute-x86_64)
 
-[Download arm64 binary](https://github.com/bonjinnorenka/releases/latest/download/lambda_simple_binary_execute-aarch64)
+[Download arm64 binary](https://github.com/bonjinnorenka/lambda_simple_binary_execute/releases/latest/download/lambda_simple_binary_execute-aarch64)
 
 1. Rename the binary to `bootstrap` and make it executable
 
