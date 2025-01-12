@@ -19,10 +19,7 @@ jobs:
 
       # Rustツールチェインのセットアップ
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
+        uses: dtolnay/rust-toolchain@stable
 
       # キャッシュの設定
       - name: Cache dependencies
